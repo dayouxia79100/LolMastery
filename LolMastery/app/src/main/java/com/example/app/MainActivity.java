@@ -2,6 +2,7 @@ package com.example.app;
 
 import java.util.Locale;
 
+import android.content.Context;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -16,7 +17,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener {
 
@@ -178,9 +184,82 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
+
+            if(getArguments().getInt(ARG_SECTION_NUMBER) == 1){
+                rootView.setBackgroundResource(R.drawable.offense_back);
+            }
+
+
+            GridView gridview = (GridView) rootView.findViewById(R.id.gridview);
+            gridview.setAdapter(new ImageAdapter(getActivity()));
+
+            gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                    Toast.makeText(getActivity(),"" + position, Toast.LENGTH_SHORT).show();
+                }
+            });
             return rootView;
+        }
+
+        public class ImageAdapter extends BaseAdapter {
+            private Context mContext;
+
+            public ImageAdapter(Context c) {
+                mContext = c;
+            }
+
+            public int getCount() {
+                return mThumbIds.length;
+            }
+
+            public Object getItem(int position) {
+                return null;
+            }
+
+            public long getItemId(int position) {
+                return 0;
+            }
+
+            // create a new ImageView for each item referenced by the Adapter
+            public View getView(int position, View convertView, ViewGroup parent) {
+                ImageView imageView;
+                if (convertView == null) {  // if it's not recycled, initialize some attributes
+                    imageView = new ImageView(mContext);
+                    imageView.setLayoutParams(new GridView.LayoutParams(150, 150));
+                    imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    imageView.setPadding(8, 8, 8, 8);
+                } else {
+                    imageView = (ImageView) convertView;
+                }
+
+                imageView.setImageResource(mThumbIds[position]);
+
+                if(position == 18 || position == 20){
+                    imageView.setVisibility(View.INVISIBLE);
+                }
+                return imageView;
+            }
+
+            // references to our images
+            private Integer[] mThumbIds = {
+                R.drawable.offense_11, R.drawable.offense_12,
+                R.drawable.offense_13, R.drawable.offense_14,
+
+                R.drawable.offense_21, R.drawable.offense_22,
+                R.drawable.offense_23, R.drawable.offense_24,
+
+                R.drawable.offense_31, R.drawable.offense_32,
+                R.drawable.offense_33, R.drawable.offense_34,
+
+                R.drawable.offense_41, R.drawable.offense_42,
+                R.drawable.offense_43, R.drawable.offense_44,
+
+                R.drawable.offense_51, R.drawable.offense_52,
+                R.drawable.offense_54, R.drawable.offense_54,
+
+                R.drawable.offense_54, R.drawable.offense_62
+
+            };
         }
     }
 

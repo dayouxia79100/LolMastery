@@ -1,8 +1,13 @@
 package com.example.app;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.content.res.XmlResourceParser;
+import android.graphics.Color;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -21,8 +26,11 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener {
 
@@ -185,19 +193,69 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-            if(getArguments().getInt(ARG_SECTION_NUMBER) == 1){
+            final int currentTab = getArguments().getInt(ARG_SECTION_NUMBER);
+
+            if(currentTab == 1){
                 rootView.setBackgroundResource(R.drawable.offense_back);
+            } else if (currentTab == 2){
+                rootView.setBackgroundResource(R.drawable.defense_back);
+            } else if (currentTab == 3){
+                rootView.setBackgroundResource(R.drawable.utility_back);
             }
 
 
             GridView gridview = (GridView) rootView.findViewById(R.id.gridview);
             gridview.setAdapter(new ImageAdapter(getActivity()));
 
+            final Integer[] maxOffense = {
+                1,4,4,1,
+                1,3,3,1,
+                1,1,1,3,
+                1,3,3,1,
+                1,3,0,1,
+                0,1
+            };
+
+            final Integer[] maxDefence = {
+                    2,2,2,2,
+                    1,3,0,1,
+                    1,1,3,3,
+                    3,1,1,1,
+                    1,4,1,0,
+                    0,1
+            };
+
+            final Integer[] maxUtility = {
+                    1,3,3,1,
+                    0,3,1,1,
+                    3,1,3,1,
+                    1,1,3,2,
+                    0,1,3,0,
+                    0,1
+            };
+
+
+
             gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                    Toast.makeText(getActivity(),"" + position, Toast.LENGTH_SHORT).show();
+
+                    TextView count = ((TextView)((RelativeLayout)v).getChildAt(1));
+                    char first = count.getText().charAt(0);
+                    char second = count.getText().charAt(2);
+
+                    int firstNumber = Character.getNumericValue(first);
+                    int secondNumber = Character.getNumericValue(second);
+
+                    if(firstNumber < secondNumber){
+                        firstNumber++;
+                        count.setText(firstNumber+"/"+secondNumber);
+                    }
+
+
                 }
             });
+
+
             return rootView;
         }
 
@@ -209,7 +267,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
             }
 
             public int getCount() {
-                return mThumbIds.length;
+                return mOffenseMasteries.length;
             }
 
             public Object getItem(int position) {
@@ -222,26 +280,102 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
 
             // create a new ImageView for each item referenced by the Adapter
             public View getView(int position, View convertView, ViewGroup parent) {
+
+
+                Map<Integer,Integer> masteryMap = new HashMap<Integer, Integer>();
+                masteryMap.put(1,1);
+                masteryMap.put(2,1);
+                masteryMap.put(12,1);
+
+
+
+
+                RelativeLayout relativeLayout = new RelativeLayout(mContext);
                 ImageView imageView;
+                TextView textView;
                 if (convertView == null) {  // if it's not recycled, initialize some attributes
                     imageView = new ImageView(mContext);
                     imageView.setLayoutParams(new GridView.LayoutParams(150, 150));
                     imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                     imageView.setPadding(8, 8, 8, 8);
+                    textView = new TextView(mContext);
+                    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                            RelativeLayout.LayoutParams.WRAP_CONTENT);
+                    lp.addRule(relativeLayout.ALIGN_PARENT_BOTTOM);
+                    lp.addRule(relativeLayout.CENTER_HORIZONTAL);
+
+                    textView.setTextColor(Color.GREEN);
+                    relativeLayout.addView(imageView);
+                    relativeLayout.addView(textView,lp);
+                    textView.setBackgroundColor(Color.BLACK);
+                    imageView.setBackgroundColor(Color.YELLOW);
                 } else {
-                    imageView = (ImageView) convertView;
+                    return convertView;
                 }
 
-                imageView.setImageResource(mThumbIds[position]);
 
-                if(position == 18 || position == 20){
-                    imageView.setVisibility(View.INVISIBLE);
+                if(getArguments().getInt(ARG_SECTION_NUMBER) == 1){
+                textView.setText("0/"+maxOffense[position]);
+                imageView.setImageResource(mOffenseMasteries[position]);
+                    if(position == 18 || position == 20){
+                        relativeLayout.setVisibility(View.INVISIBLE);
+                    }
+                } else if (getArguments().getInt(ARG_SECTION_NUMBER) == 2){
+                    textView.setText("0/"+maxDefence[position]);
+                    imageView.setImageResource(mDefenseMasteries[position]);
+                    if(position == 6 || position == 19 || position == 20){
+                        relativeLayout.setVisibility(View.INVISIBLE);
+                    }
+                } else if (getArguments().getInt(ARG_SECTION_NUMBER) == 3){
+                    textView.setText("0/"+maxUtility[position]);
+                    imageView.setImageResource(mUtilityMasteries[position]);
+                    if(position == 4 || position == 16 || position == 19 || position==20){
+                        relativeLayout.setVisibility(View.INVISIBLE);
+                    }
                 }
-                return imageView;
+
+                if(masteryMap.containsKey(position)){
+                    textView.setText(masteryMap.get(position)+"/"+textView.getText().charAt(2));
+                    relativeLayout.setAlpha(1);
+                } else{
+                    relativeLayout.setAlpha(0.45f);
+                }
+
+                return relativeLayout;
+
+
             }
+            private Integer[] maxOffense = {
+                    1,4,4,1,
+                    1,3,3,1,
+                    1,1,1,3,
+                    1,3,3,1,
+                    1,3,0,1,
+                    0,1
+            };
+
+            private Integer[] maxDefence = {
+                    2,2,2,2,
+                    1,3,0,1,
+                    1,1,3,3,
+                    3,1,1,1,
+                    1,4,1,0,
+                    0,1
+            };
+
+            private Integer[] maxUtility = {
+                    1,3,3,1,
+                    0,3,1,1,
+                    3,1,3,1,
+                    1,1,3,2,
+                    0,1,3,0,
+                    0,1
+            };
+
+
 
             // references to our images
-            private Integer[] mThumbIds = {
+            private Integer[] mOffenseMasteries = {
                 R.drawable.offense_11, R.drawable.offense_12,
                 R.drawable.offense_13, R.drawable.offense_14,
 
@@ -258,6 +392,45 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                 R.drawable.offense_54, R.drawable.offense_54,
 
                 R.drawable.offense_54, R.drawable.offense_62
+
+            };
+
+            private Integer[] mDefenseMasteries = {
+                    R.drawable.defense_11, R.drawable.defense_12,
+                    R.drawable.defense_13, R.drawable.defense_14,
+
+                    R.drawable.defense_21, R.drawable.defense_22,
+                    R.drawable.defense_22, R.drawable.defense_24,
+
+                    R.drawable.defense_31, R.drawable.defense_32,
+                    R.drawable.defense_33, R.drawable.defense_34,
+
+                    R.drawable.defense_41, R.drawable.defense_42,
+                    R.drawable.defense_43, R.drawable.defense_44,
+
+                    R.drawable.defense_51, R.drawable.defense_52,
+                    R.drawable.defense_53, R.drawable.defense_53,
+
+                    R.drawable.defense_62, R.drawable.defense_62
+            };
+
+            private  Integer[] mUtilityMasteries = {
+                    R.drawable.utility_11, R.drawable.utility_12,
+                    R.drawable.utility_13, R.drawable.utility_14,
+
+                    R.drawable.utility_22, R.drawable.utility_22,
+                    R.drawable.utility_23, R.drawable.utility_24,
+
+                    R.drawable.utility_31, R.drawable.utility_32,
+                    R.drawable.utility_33, R.drawable.utility_34,
+
+                    R.drawable.utility_41, R.drawable.utility_42,
+                    R.drawable.utility_43, R.drawable.utility_44,
+
+                    R.drawable.utility_52, R.drawable.utility_52,
+                    R.drawable.utility_53, R.drawable.utility_53,
+
+                    R.drawable.utility_62, R.drawable.utility_62
 
             };
         }
